@@ -13,13 +13,6 @@ type Msg struct {
 	Message string
 }
 
-func f(x int) int {
-	if x < 1 {
-		return x
-	}
-	return x + f(x-1)
-}
-
 func main() {
 	app := gin.New()
 	app.GET("/health", func(ctx *gin.Context) {
