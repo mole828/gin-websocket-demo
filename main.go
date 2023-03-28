@@ -1,15 +1,16 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/mole828/gin-websocket-demo/src/chatroom"
+	"github.com/mole828/gin-websocket-demo/src/chatroom/user"
 )
 
 type Msg struct {
+	From    string
 	Message string
 }
 
@@ -20,7 +21,7 @@ func main() {
 			"health": true,
 		})
 	})
-
+	chatroom := chatroom.New()
 	app.GET("/ws", func(ctx *gin.Context) {
 		upGrande := websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -33,25 +34,7 @@ func main() {
 		if err != nil {
 			return
 		}
-
-		go func() {
-			defer conn.Close()
-			for {
-				//
-				messageType, message, err := conn.ReadMessage()
-				if err != nil {
-					fmt.Println(err)
-					break
-				}
-				fmt.Printf("ack: %d, %s \n", messageType, message)
-				v := gin.H{}
-				err = json.Unmarshal(message, &v)
-				if err != nil {
-					break
-				}
-				fmt.Println(v)
-			}
-		}()
+		chatroom.Join(user.New(conn))
 	})
 	app.Run(":8080")
 }
