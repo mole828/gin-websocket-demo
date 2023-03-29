@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -55,8 +57,57 @@ func RunServer(ch *amqp.Channel) {
 	app.Run(fmt.Sprintf(":%d", port))
 }
 
+type AmqpConfig struct {
+	Uri string
+}
+
+type Config struct {
+	Amqp AmqpConfig
+}
+
+func ReadConfig() (*Config, error) {
+	fmt.Println(os.Getwd())
+	file, err := os.Open("config.json")
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// 获取文件大小
+	fi, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	size := fi.Size()
+
+	// 创建足够大的字节数组来存储文件内容
+	data := make([]byte, size)
+
+	// 读取文件内容
+	n, err := file.Read(data)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("read:", n)
+
+	s := string(data)
+	fmt.Println(s)
+	config := &Config{}
+	err = json.Unmarshal(data, config)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(config.Amqp.Uri)
+	return config, nil
+}
+
 func main() {
-	conn, _ := amqp.Dial("amqp://golang:golangpass@www.moles.top:5672/")
+	config, err := ReadConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	conn, _ := amqp.Dial(config.Amqp.Uri)
 	defer conn.Close()
 
 	ch, _ := conn.Channel()
