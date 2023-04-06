@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -34,6 +35,11 @@ func RunServer(ch *amqp.Channel) {
 	app.GET("/health", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"health": true,
+		})
+	})
+	app.GET("/goroutine", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"runtime.NumGoroutine": runtime.NumGoroutine(),
 		})
 	})
 	chatroom, _ := chatroom.New(ch)
