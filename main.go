@@ -60,6 +60,7 @@ func RunServer(ch *amqp.Channel) {
 	for Port_already_in_use(port) {
 		port += 1
 	}
+	app.Use(gin.Recovery())
 	app.Run(fmt.Sprintf(":%d", port))
 }
 
